@@ -17,7 +17,7 @@ currentdirectory = pwd;
 
 %%
 subID=1; %Enter the name of the Participant
-session='E';
+session='T';
 taskName='Left';
 bandName='Mu';
 
@@ -91,6 +91,11 @@ for trl=1:size(erd,1)
     pot(70)=1;
 
     topoplot(pot,'Standard-10-20-Cap81.locs','headrad',0.46,'conv','on','shading','interp','mapLimits',[0 2]);
+%     saveas(gcf,[srcOut 'A0' num2str(subID) '_' session '_'  bandName '_tr' num2str(trl) '_' num2str(activityPeriod(1)) 's_' num2str(activityPeriod(2)) 's_' taskName '.png']);
+    set(gcf,'PaperUnits','inches','PaperPosition',[0 0 3 2.5]);
+%     print -dpng temp.png -r100
+%     imshow('temp.png');
+
     saveas(gcf,[srcOut 'A0' num2str(subID) '_' session '_'  bandName '_tr' num2str(trl) '_' num2str(activityPeriod(1)) 's_' num2str(activityPeriod(2)) 's_' taskName '.png']);
     
     close all

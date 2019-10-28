@@ -16,9 +16,9 @@ currentdirectory = pwd;
 
 
 %%
-subID=3; %Enter the name of the Participant
+subID=1; %Enter the name of the Participant
 session='E';
-taskName='Right';
+taskName='Left';
 bandName='Mu';
 
 

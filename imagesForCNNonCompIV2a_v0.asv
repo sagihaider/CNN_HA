@@ -1,6 +1,7 @@
 clc
 clear all
 close all
+currentdirectory = pwd;
 %%%BCI Competition Dataset-IV_2a 
 %%Number of Subjects=9, Number of Sessions=2, Number of Runs in each
 %%Session=6 with 48 trials, total=48x6=288 trials in each session. The time
@@ -17,68 +18,63 @@ close all
 %%
 subID=7; %Enter the name of the Participant
 session='T';
-taskName='L';
-bandName='M';
-cue=2;
+taskName='Left';
+bandName='Mu';
 
-if(taskName=='L')
+
+if(strcmp(taskName,'Left')==1)
     task=1; %Enter the classlabel of the task:= 1:Right, 2:Left: Here the patient was right impaired
-elseif(taskName=='R')
+elseif(strcmp(taskName,'Right')==1)
     task=2;  
-elseif(taskName=='F')
+elseif(strcmp(taskName,'Feet')==1)
     task=3; 
-elseif(taskName=='T')
+elseif(strcmp(taskName,'Tongue')==1)
     task=4; 
 end
-
- %Cue given at 2s in a trial of 0 to 6s.
  
-if(bandName=='M')
+ %Enter Frequency band Mu[8 12]/Beta[16 24]; 
+if(strcmp(bandName,'Mu')==1)
     band=[8 12]; %Enter the classlabel of the task:= 1:Right, 2:Left: Here the patient was right impaired
-elseif(taskName=='B')
+elseif(strcmp(bandName,'Beta')==1)
     band=[16 24];  
 end
-
- %Enter Frequency band Mu[8 12]/Beta[16 24];
-  
 
 MovingWin=250; %smoothing window for ERD calculation
 order=4;
 fs=250; %sampling frequency
 [B_u,A_u]=butter(order,band/fs*2); 
 
-act=0.5; %starting time point for activity period
-baseLinePeriod=[-1 0]+cue; %Enter the desired baseline period before cue
-load(['parsed_A0' num2str(subID) session '.mat']);
+activityPeriod=[3 5];
+baseLinePeriod=[1 2]; %Enter the desired baseline period before cue
+load([currentdirectory '\Data_Parsed\parsed_A0' num2str(subID) session '.mat']);
+% load(['Data_Parsed\parsed_A0' num2str(subID) session '.mat']);
 
    
 taskLabels=find(cleanClassLabels==task);
 taskSpecificTrials=cleanRawEEGData(taskLabels,:,:);
 
-inst=0;
-hop=0.25;
-win=0.5;
-stTime=2.5;
-trlLength=6;
-
 for trl=1:size(taskSpecificTrials,1)
-   for tmSeg=stTime:hop:trlLength-win
-        inst=inst+1;
-        activityPeriod=[tmSeg tmSeg+win];
-            for ch=1:size(taskSpecificTrials,2)
-                temp=squeeze(taskSpecificTrials(trl,ch,:));
-                tempFilt=filter(B_u,A_u,temp);
-                tempFilt=tempFilt';
-                tempFiltPwSm = smooth(tempFilt.^2,MovingWin);
-                erd(inst,ch)=mean(tempFiltPwSm(round(activityPeriod(1)*fs):round(activityPeriod(2)*fs)))/mean(tempFiltPwSm(round(baseLinePeriod(1)*fs):round(baseLinePeriod(2)*fs)));
-            end
-            
+    for ch=1:size(taskSpecificTrials,2)
+        temp=squeeze(taskSpecificTrials(trl,ch,:));
+        tempFilt=filter(B_u,A_u,temp);
+        tempFilt=tempFilt';
+        tempFiltPwSm = smooth(tempFilt.^2,MovingWin);
+        erd(trl,ch)=mean(tempFiltPwSm(round(activityPeriod(1)*fs):round(activityPeriod(2)*fs)))/mean(tempFiltPwSm(round(baseLinePeriod(1)*fs):round(baseLinePeriod(2)*fs)));
     end
 end
 
 pot=ones(1,81);
-    for trl=1:size(erd,1)
-    
+
+if(strcmp(session,'T')==1)
+    sub3='Train';
+else
+    sub3='eval';
+end
+
+srcOut=[currentdirectory '\FeaturesIm\A0' num2str(subID) '\' sub3 '\'];
+
+for trl=1:size(erd,1)
+
     pot(17)=erd(trl,1);
     pot(26:30)=[erd(trl,2:6)];
     pot(36:42)=[erd(trl,7:13)];
@@ -86,11 +82,10 @@ pot=ones(1,81);
     pot(60:62)=[erd(trl,19:21)];
     pot(70)=erd(trl,22);
 
-    % topoplot(pot,'Standard-10-20-Cap81.locs','electrodes','labels','headrad',0.46,'conv','on','shading','interp','mapLimits',[0 2]);
     topoplot(pot,'Standard-10-20-Cap81.locs','headrad',0.46,'conv','on','shading','interp','mapLimits',[0 2]);
-    saveas(['imgA0' num2str(subID) '_' session '_'  bandName '_' ' taskName '_' 'num2str(trl) )
-    pause(1);
+    saveas(gcf,[srcOut 'A0' num2str(subID) '_' session '_'  bandName '_tr' num2str(trl) '_' num2str(activityPeriod(1)) 's_' num2str(activityPeriod(2)) 's_' taskName '.png']);
+    
     close all
-    end
+end
 
 

@@ -6,11 +6,11 @@
 clc
 clear all
 close all
-session='E';
+session='T';
 trlLength=6;
 eegChannels=1:22;
 tic
-for subID=1:9
+for subID=3:3
     [s, HDR] = sload(['A0' num2str(subID) session '.gdf']);
   
     nOfTrials=length(HDR.TRIG);
@@ -32,6 +32,6 @@ for subID=1:9
     cleanClassLabels=classLabels(goodTrials);
 
     eval(['save([''parsed_A0'' num2str(subID) session ''.mat''],''cleanRawEEGData'',''cleanClassLabels'')']);
-    clear s HDR rawData cleanRawData cleanRawEEGData 
+   % clear s HDR rawData cleanRawData cleanRawEEGData 
     [subID toc]
 end
